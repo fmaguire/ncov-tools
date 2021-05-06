@@ -88,7 +88,7 @@ def tsv_to_table(filename, table_formatter):
 
         rows = list()
         header = list()
-        
+
         for row in reader:
 
             # remove columns
@@ -107,7 +107,7 @@ def tsv_to_table(filename, table_formatter):
                         header.append(table_formatter.name_map[k])
                     else:
                         header.append(escape_latex(k))
-                
+
             # transform with row func
             for k in row:
                 if k in table_formatter.row_func:
@@ -126,7 +126,7 @@ def write_image(image_filename, scale=1.0):
     print("\includegraphics[scale=%f]{%s}" % (scale, image_filename))
     print(r"\end{center}")
 
-# latex for displaying a table 
+# latex for displaying a table
 def write_table(spec, header, rows, size):
     print(r"\begin{center}")
     print(r"\%s" % size)
@@ -167,7 +167,7 @@ def write_negative_control_section():
 
     # write summary table
     table_path = args.negative_control_table.format(run_name=args.run_name)
-    
+
     if os.path.exists(table_path):
 
         # set up TableFormatter to transform the tsv into a nicer display
@@ -178,12 +178,12 @@ def write_negative_control_section():
                         "genome_covered_bases" : "Covered",
                         "genome_total_bases" : "Target Footprint",
                         "genome_covered_fraction" : "Percent Covered",
-                        "amplicons_detected" : "Amplicons Detected" 
+                        "amplicons_detected" : "Amplicons Detected"
                       }
 
         # map to transform selected row columns into more readable values
         tf.row_func = { "file" : lambda value : filename_to_sample(value),
-                        "amplicons_detected" : lambda value : value.replace(",", ", "), 
+                        "amplicons_detected" : lambda value : value.replace(",", ", "),
                         "genome_covered_fraction" : lambda value : "%.1f" % (float(value) * 100.0)
                       }
 
@@ -197,7 +197,7 @@ def write_negative_control_section():
 # and the ambiguity report
 def write_tree_section():
     print("\section{Sequence Variation}")
-   
+
     tree_plot_path = args.tree_figure.format(run_name=args.run_name)
 
     if os.path.isfile(tree_plot_path):
@@ -233,7 +233,7 @@ def write_tree_section():
 
     # Mixture/Contamination subsection
     print(r"\subsection{Mixture Report}")
-    
+
     # The mixture table can be quite large so we report the samples as a list
     if args.platform == "illumina":
         mixture_report_fn = args.mixture_table.format(run_name=args.run_name)
@@ -242,7 +242,7 @@ def write_tree_section():
             reader = csv.DictReader(f, delimiter="\t")
             for row in reader:
                 mixture_samples.add(row['sample_a'])
-        
+
         if len(mixture_samples) > 0:
             s = "The following samples were detected by \\texttt{mixture\_report.py} as having"\
                 " read evidence for multiple distinct sequences. These samples should be checked"\
@@ -268,6 +268,7 @@ def write_summary_qc_section():
                     "num_variants_indel_triplet" : "Variant Triplet Indels",
                     "qpcr_ct" : "ct",
                     "collection_date" : "Date",
+                    "lineage": "Lineage",
                     "genome_completeness" : "Percent Complete",
                     "qc_pass" : "QC flags" }
 
@@ -275,10 +276,11 @@ def write_summary_qc_section():
                     "genome_completeness" : lambda value : "%.1f" % (float(value) * 100.0),
                     "qpcr_ct" : lambda value : format_ct(value) }
 
-    tf.column_filter = [ "run_name", "mean_sequencing_depth", 
-                         "median_sequencing_depth", "num_consensus_n", 
-                         "num_weeks", "scaled_variants_snvs", "lineage", "lineage_notes", "watch_mutations" ]
-    tf.table_spec = "{|c|C{1.3cm}|C{1.3cm}|C{1.0cm}|C{1.0cm}|C{1.0cm}|c|c|C{1.2cm}|C{4.0cm}|}"
+    tf.column_filter = [ "run_name", "mean_sequencing_depth",
+                         "median_sequencing_depth", "num_consensus_n",
+                         "num_weeks", "scaled_variants_snvs", "lineage_notes", "watch_mutations" ]
+    tf.table_spec = "{|c|C{1.3cm}|C{1.3cm}|C{1.0cm}|C{1.0cm}|C{1.0cm}|c|c|C{1.2cm}|C{4.0cm}|c|}"
+
     tsv_to_table(args.summary_qc_table.format(run_name=args.run_name), tf)
 
 # this is used to pull out samples from the summary qc file that should
@@ -323,18 +325,18 @@ def write_flagged_sample_section():
     tf.row_accept = partial(flagged_sample_accept, args.voc_lineages.split(","))
 
     # Discard most columns
-    tf.column_filter = [ "run_name", 
+    tf.column_filter = [ "run_name",
                          "mean_sequencing_depth",
                          "qpcr_ct",
-                         "num_consensus_snvs", 
-                         "num_consensus_iupac", 
-                         "num_variants_snvs", 
-                         "num_variants_indel", 
-                         "num_variants_indel_triplet", 
+                         "num_consensus_snvs",
+                         "num_consensus_iupac",
+                         "num_variants_snvs",
+                         "num_variants_indel",
+                         "num_variants_indel_triplet",
                          "median_sequencing_depth",
                          "collection_date",
-                         "num_consensus_n", 
-                         "num_weeks", 
+                         "num_consensus_n",
+                         "num_weeks",
                          "scaled_variants_snvs",
                          "qc_pass" ]
     tf.table_spec = "{|c|C{1.5cm}|c|c|C{5cm}|}"

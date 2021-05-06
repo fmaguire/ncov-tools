@@ -68,15 +68,25 @@ rule make_alleles:
     shell:
         "python {params.alleles_script} --reference-name MN908947.3 {input} > {output}"
 
+# update pangolin
+rule ensure_pangolin_updated:
+    output:
+        touch('lineages/pangolin_updated')
+    shell:
+        """
+        pangolin --update || echo "Cannot reach server to auto-update pangolin"
+        """
+
 # assign lineages to the consensus genomes using pangolin
 rule make_lineage_assignments:
     input:
-        "qc_analysis/{prefix}_consensus.fasta"
+        genome="qc_analysis/{prefix}_consensus.fasta",
+        version_touch="lineages/pangolin_updated"
     output:
         "lineages/{prefix}_lineage_report.csv"
     threads: workflow.cores
     shell:
-        "pangolin --outfile {output} {input}"
+        "pangolin --outfile {output} {input.genome}"
 
 # write pangolin version information to a file
 # this depends on the pangolin output file to
